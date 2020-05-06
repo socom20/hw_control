@@ -12,8 +12,8 @@ import traceback
 import random
 import time
 
-sys.path.append("../Gender_Classification/ws_client_server")
-sys.path.append("../CNC_controller")
+sys.path.append("../yolo-face-recognition/ws_client_server")
+sys.path.append("../CNC_Controller")
 
 import cp_ui
 from webcam_capture import GenderDetectorClient
@@ -28,8 +28,8 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
 
         # default config:
         self.cfg_d = {
-            'cam_server_ip':'localhost',
-            'cam_server_port':8080,
+            'cam_server_ip':'34.69.121.169',
+            'cam_server_port':7001,
             'cam_index':0,
             'cam_server_password':'yolo_gender',
             'cam_target_fps':5,
