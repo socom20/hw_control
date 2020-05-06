@@ -381,12 +381,13 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
                 if k in cfg_d.keys():
                     if type(cfg_d[k]) == list:
                         cfg_d[k] = tuple(cfg_d[k])
+                        
                     if self.cfg_d[k] != cfg_d[k]:
-                        print(' - No default Setting: {} = {} >> {}'.format(k, self.cfg_d[k], cfg_d[k]))
+                        print(' - Default config updated: {} = {} >> {}'.format(k, self.cfg_d[k], cfg_d[k]))
                         
                     self.cfg_d[k] = cfg_d[k]
                 else:
-                    print(' - WARNING: key:"{}" no encontrada en archivo config.'.format(k), file=sys.stderr)
+                    print(' - WARNING: key:"{}" not found in the "config.json" file.'.format(k), file=sys.stderr)
 
         return None
 
