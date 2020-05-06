@@ -40,7 +40,7 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
             'cnc_serial_port':'/dev/ttyUSB0',
             'cnc_baudrate':115200,
             'cnc_move_speed':1000,
-            'cnc_paper_size':(210, 297),
+            'cnc_paper_size':(145,180),
             'cnc_coord_transform':'BL',  # None BL or UR
 
 
@@ -90,7 +90,7 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
 
         self.btn_TestPaper.clicked.connect(self.CNC_testPaper)
         self.btn_PenUp.clicked.connect(self.CNC_PenUp)
-        self.btn_PenDown.clicked.connect(self.CNC_PenUp)
+        self.btn_PenDown.clicked.connect(self.CNC_PenDown)
         self.btn_GoHome.clicked.connect(self.CNC_GoHome)
         self.btn_GoTo.clicked.connect(self.CNC_GoTo)
 
