@@ -45,8 +45,8 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
 
 
             
-            'male_letters_folder':  r'../gpt2_text_generator/gpt_generations/male',
-            'female_letters_folder':r'../gpt2_text_generator/gpt_generations/female',
+            'male_letters_folder':  r'../gpt_generations/male',
+            'female_letters_folder':r'../gpt_generations/female',
             'hw_file_ext':'pickle',
 
             'min_detected_frames_to_send_HW': 20,
@@ -75,8 +75,35 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
         self.cnc_connected  = False
 
         self.test_cam_timer = None
+
+        self.search_HW_files()
+
         return None
 
+
+    def search_HW_files(self, show_summary_msg=True):
+        self.search_dir_male   = os.path.join(self.cfg_d['male_letters_folder'], '*.{}'.format(self.cfg_d['hw_file_ext']))
+        self.search_dir_female = os.path.join(self.cfg_d['female_letters_folder'], '*.{}'.format(self.cfg_d['hw_file_ext']))
+
+        self.all_hw_files_male_v = glob.glob( self.search_dir_male )
+        self.all_hw_files_female_v = glob.glob( self.search_dir_female )
+
+        self.summary_str = ' - Male:\n    path: "{}"\n    found {:2d} files.\n\n - Female:\n    path: "{}"\n    found {:2d} files.'.format(
+            self.cfg_d[  'male_letters_folder'], len(self.all_hw_files_male_v),
+            self.cfg_d['female_letters_folder'], len(self.all_hw_files_female_v) )
+
+        if show_summary_msg:
+            self.symmary_timer = QTimer()
+            self.symmary_timer.timeout.connect(self.show_summary)
+            self.symmary_timer.start(300.0)
+        
+        return None
+
+
+    def show_summary(self):
+        buttonReply = QMessageBox.information(self, 'Searching "{}" files'.format(self.cfg_d['hw_file_ext']), self.summary_str, QMessageBox.Ok, QMessageBox.Ok)
+        self.symmary_timer.stop()
+        return None
 
 
     def _connect_ui(self):
@@ -127,16 +154,25 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
         return None
     
 
-    def _update_mode_label(self):
-        self.lbl_mode.setText('Mode = {}'.format('AUTO (@ {} frms)'.format(self.cfg_d['min_detected_frames_to_send_HW']) if self.automatic_mode else 'MANUAL'))
-        return None
-
     def switch_mode(self):
+        if self.automatic_mode == False:
+            if self.cnc_connected == False:
+                try:
+                    self._CNC_connect()
+                except Exception as e:
+                    self._show_exception_msg(e)
+                    return None
+                
+            self.start_capture()
+            
         self.automatic_mode = not self.automatic_mode
         self._update_mode_label()
         
         return None
 
+    def _update_mode_label(self):
+        self.lbl_mode.setText('Mode = {}'.format('AUTO (@ {} frms)'.format(self.cfg_d['min_detected_frames_to_send_HW']) if self.automatic_mode else 'MANUAL'))
+        return None
     
     def _show_exception_msg(self, e=None, show_trace=True):
         buttonReply = QMessageBox.critical(self, 'ERROR:', "{}".format(e), QMessageBox.Ok, QMessageBox.Ok)
@@ -180,11 +216,8 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
 
         return None
 
-    def _CNC_send_rnd_file(self, search_dir='./'):
-
+    def _CNC_send_rnd_file(self, all_hw_files_v):
         try:
-            all_hw_files_v = glob.glob( search_dir )
-
             if len(all_hw_files_v) == 0:
                 raise Exception('No files found at {}'.format(search_dir))
             else:
@@ -198,49 +231,32 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
         
 
     def CNC_send_rnd_Male_file(self):
-        try:
-            search_dir = os.path.join(self.cfg_d['male_letters_folder'],
-                                      '*.{}'.format(self.cfg_d['hw_file_ext']))
-
-            self._CNC_send_rnd_file(search_dir)
-        except Exception as e:
-            self._show_exception_msg(e)
-
+        self._CNC_send_rnd_file(self.all_hw_files_male_v)
+        
         return None
 
 
     def CNC_send_rnd_Female_file(self):
-        try:
-            search_dir = os.path.join(self.cfg_d['female_letters_folder'],
-                                      '*.{}'.format(self.cfg_d['hw_file_ext']))
-
-            self._CNC_send_rnd_file(search_dir)
-        except Exception as e:
-            self._show_exception_msg(e)
-
+        self._CNC_send_rnd_file(self.all_hw_files_female_v)
+        
         return None
         
 
-    def CNC_disconnect(self):
-        try:
-            if self.cnc_controller is not None:
-                self.cnc_controller.close()
-                self.cnc_controller = None
-                self.btn_ConnectDisconnect.setText('Connect')
-            else:
-                raise Exception('CNC is not connected.')
-            
-        except Exception as e:
-            self._show_exception_msg(e)
+    def _CNC_disconnect(self):
+        if self.cnc_controller is not None:
+            self.cnc_controller.close()
+            self.cnc_controller = None
+            self.btn_ConnectDisconnect.setText('Connect')
+        else:
+            raise Exception('CNC is not connected.')
 
         return None
 
-    def CNC_connect(self):
 
-        buttonReply = QMessageBox.information(self, 'CNC start position check', 'The initial position of the Pen must be on the Bottom Left corner of the paper.', QMessageBox.Ok, QMessageBox.Ok)
-
+    def _CNC_connect(self):
         if self.cnc_controller is not None:
             self.CNC_disconnect()
+            
         try:
             self.cnc_controller = CNC_controller(
                 serial_port=self.cfg_d['cnc_serial_port'],
@@ -255,16 +271,21 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
             
         except Exception as e:
             self.cnc_controller = None
-            self._show_exception_msg(e)
+            raise(e)
 
         return None
 
 
     def CNC_switch_connection(self):
-        if self.cnc_controller is None:
-            self.CNC_connect()            
-        else:
-            self.CNC_disconnect()
+        try:
+            if self.cnc_controller is None:
+                
+                self._CNC_connect()            
+            else:
+                self._CNC_disconnect()
+                
+        except Exception as e:
+            self._show_exception_msg(e)
             
         return None
 
@@ -452,12 +473,12 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
                         self.CNC_send_rnd_Female_file()
 
                     self.switch_mode()
+                    self.stop_capture()
                 
         return None
 
     
     def start_capture(self):
-        
         if self.on_webcam_test:
             self.switch_webcam_test()
             
