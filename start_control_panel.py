@@ -72,7 +72,6 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
         self._update_mode_label()
 
         self.on_webcam_test = False
-        self.cnc_connected  = False
 
         self.test_cam_timer = None
 
@@ -105,6 +104,11 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
         self.symmary_timer.stop()
         return None
 
+
+    def show_CNC_info(self):
+        buttonReply = QMessageBox.information(self, 'CNC start position check', 'The initial position of the Pen must be on the Bottom Left corner of the paper.', QMessageBox.Ok, QMessageBox.Ok)
+        return None
+    
 
     def _connect_ui(self):
         # Connect the UI
@@ -156,7 +160,7 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
 
     def switch_mode(self):
         if self.automatic_mode == False:
-            if self.cnc_connected == False:
+            if self.cnc_controller is None:
                 try:
                     self._CNC_connect()
                 except Exception as e:
@@ -253,9 +257,12 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
         return None
 
 
-    def _CNC_connect(self):
+    def _CNC_connect(self, show_info=False):
+        if show_info:
+            self.show_CNC_info()
+            
         if self.cnc_controller is not None:
-            self.CNC_disconnect()
+            self._CNC_disconnect()
             
         try:
             self.cnc_controller = CNC_controller(
@@ -280,7 +287,7 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
         try:
             if self.cnc_controller is None:
                 
-                self._CNC_connect()            
+                self._CNC_connect(show_info=False)            
             else:
                 self._CNC_disconnect()
                 
