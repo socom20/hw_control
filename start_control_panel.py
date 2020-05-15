@@ -287,7 +287,7 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
         try:
             if self.cnc_controller is None:
                 
-                self._CNC_connect(show_info=False)            
+                self._CNC_connect(show_info=True)            
             else:
                 self._CNC_disconnect()
                 
@@ -474,13 +474,16 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
 
             if self.automatic_mode:
                 if self.detected_frames > self.cfg_d['min_detected_frames_to_send_HW']:
-                    if self.detected_gender == 'male':
+
+                    self.switch_mode()
+                    self.stop_capture()
+                    
+                    if self.detected_gender.lower() == 'male':
                         self.CNC_send_rnd_Male_file()
                     else:
                         self.CNC_send_rnd_Female_file()
 
-                    self.switch_mode()
-                    self.stop_capture()
+
                 
         return None
 
