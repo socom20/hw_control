@@ -28,7 +28,7 @@ class HW_ContolApp(QtWidgets.QMainWindow, cp_ui.Ui_MainWindow):
 
         # default config:
         self.cfg_d = {
-            'cam_server_ip':'34.69.121.169',
+            'cam_server_ip':'localhost',
             'cam_server_port':7001,
             'cam_index':0,
             'cam_server_password':'yolo_gender',
